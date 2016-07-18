@@ -11,7 +11,9 @@ vagrant up
 ```
 
 ## Test 
-- start a dummy primitive resrouce 
+
+Start a dummy primitive resrouce 
+
 ```
 vagrant@dangerzone1:~$ sudo crm configure primitive dummy0 ocf:pacemaker:Dummy op monitor interval=120s
 vagrant@dangerzone1:~$ sudo crm_mon -1
@@ -28,7 +30,9 @@ Online: [ dangerzone0 dangerzone1 dangerzone2 ]
 
  dummy0	(ocf::pacemaker:Dummy):	  Started dangerzone0 
 ```
-- Check the Nodes 
+
+Check the Nodes 
+
 ```
 vagrant@dangerzone1:~$ sudo crm configure show
 node $id="744751204" dangerzone0
@@ -43,7 +47,8 @@ property $id="cib-bootstrap-options" \
 	 migration-threshold="1" \
 	 stonith-enabled="false"
 ```
-- Stop the resource and see it move, Alternatively kill dangerzone0 and see the resource move
+Stop the resource and see it move, Alternatively kill dangerzone0 and see the resource move
+
 ```
 vagrant@dangerzone1:~$ sudo crm_resource --resource dummy0 --force-stop
 Operation stop for dummy0 (ocf:pacemaker:Dummy) returned 0
@@ -53,12 +58,15 @@ resource dummy0 is running on: dangerzone1
 ```
 
 ## Stop
-- don't forget to clean up interfaces 
+
+Don't forget to clean up interfaces 
+
 ```
 vagrant destroy -f && VBoxManage hostonlyif remove vboxnet0 && VBoxManage hostonlyif remove vboxnet1
 ```
 
 ## Docs 
+
 - https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources resource options (basically shell scripts)
 - https://www.virtualbox.org/manual/ch06.html#network_hostonly Vagrant networking
 - Jira Link? 
