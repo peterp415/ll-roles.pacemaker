@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  author: Location Labs
+  description: Installs pacemaker/corosync
+  company: Location Labs
+  license: Apache
+  min_ansible_version: 1.9.4 
+dependencies: []
