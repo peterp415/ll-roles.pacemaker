@@ -1,39 +1,32 @@
 ---
-- name: install pacemaker 
-  apt: >
-       update_cache=yes
-       name=pacemaker
-       install_recommends=yes
-       state=present
+- name: Install pacemaker/corosync
+  apt: name="{{ item }}" state=present
+  with_items:
+    - pacemaker
+    - corosync
 
-- name: install coreosync
-  apt: >
-       update_cache=yes    
-       name=corosync
-       install_recommends=yes
-       state=present
-
-- name: configure corosync to be able to listen the messages that are going to be sent in the network
-  template:
-    src=roles/pacemaker/templates/corosync.conf
-    dest=/etc/corosync/corosync.conf
+- name: Configure corosync cluster
+  template: src=corosync.conf.j2 dest=/etc/corosync/corosync.conf
   notify:
-    -  start pacemaker  
+    - restart corosync
 
-- name: Before being able to start corosync, we need to edit /etc/default/corosync and enable it by changing the no to yes
-  template:
-    src=roles/pacemaker/templates/corosync
-    dest=/etc/default/corosync
-  notify:
-    -  start corosync 
+- name: Ensure corosync is set to start at boot
+  lineinfile: dest=/etc/default/corosync regexp=^START line="START=yes"
 
-- name: ensure pacemaker is running 
-  service: name=pacemaker state=started enabled=yes
+# See http://docs.openstack.org/ha-guide/controller-ha-pacemaker.html
+- name: Fix pacemaker boot order
+  command: update-rc.d pacemaker start 20 2 3 4 5 . stop 00 0 1 6 .
 
-- name: ensure corosync is running 
+- name: Set pacemaker uid/gid
+  copy: src=pacemaker dest=/etc/corosync/uidgid.d/pacemaker
+
+- name: ensure corosync is running
   service: name=corosync state=started enabled=yes
 
-#- name: test connections 
+- name: ensure pacemaker is running
+  service: name=pacemaker state=started enabled=yes
+
+#- name: test connections
 #sudo crm_mon
 #sudo crm configure show
 #sudo crm configure show xml

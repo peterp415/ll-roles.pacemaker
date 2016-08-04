@@ -1,6 +1,3 @@
 ---
-- name: start pacemaker
-  service: name=pacemaker state=started
-
-- name: start corosync
+- name: restart corosync
   service: name=corosync state=started
