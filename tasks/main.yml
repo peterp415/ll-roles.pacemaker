@@ -8,7 +8,7 @@
 - name: Configure corosync cluster
   template: src=corosync.conf.j2 dest=/etc/corosync/corosync.conf
   notify:
-    - restart corosync
+    - restart HA
 
 - name: Ensure corosync is set to start at boot
   lineinfile: dest=/etc/default/corosync regexp=^START line="START=yes"
@@ -19,12 +19,30 @@
 
 - name: Set pacemaker uid/gid
   copy: src=pacemaker dest=/etc/corosync/uidgid.d/pacemaker
+  notify:
+    - restart HA
 
-- name: ensure corosync is running
-  service: name=corosync state=started enabled=yes
+- name: Tell Pacemaker to use corosync
+  copy: src=pcmk dest=/etc/corosync/service.d/pcmk
+  notify:
+    - restart HA
 
-- name: ensure pacemaker is running
-  service: name=pacemaker state=started enabled=yes
+- name: Ensure services are running
+  service: name="{{ item }}" state=started enabled=yes
+  with_items:
+    - corosync
+    - pacemaker
+
+- meta: flush_handlers
+
+- name: Wait for cluster
+  pause: seconds=30
+
+- name: Configure cluster
+  run_once: true
+  command: "{{ item }}"
+  with_items:
+    - crm configure property stonith-enabled=false
 
 #- name: test connections
 #sudo crm_mon

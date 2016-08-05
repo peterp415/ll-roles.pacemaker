@@ -50,6 +50,7 @@ amf {
 quorum {
         # Quorum for the Pacemaker Cluster Resource Manager
         provider: corosync_votequorum
+        wait_for_all: 1
         expected_votes: 1
 }
 
