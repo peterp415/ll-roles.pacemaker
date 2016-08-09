@@ -43,10 +43,5 @@
   command: "{{ item }}"
   with_items:
     - crm configure property stonith-enabled=false
-
-#- name: test connections
-#sudo crm_mon
-#sudo crm configure show
-#sudo crm configure show xml
-#sudo crm_verify -L -V
-#crm configure property stonith-enabled=false
+    - crm configure rsc_defaults resource-stickiness="{{ pacemaker_resource_stickiness }}"
+    - crm configure rsc_defaults migration-threshold="{{ pacemaker_migration_threshold }}"
