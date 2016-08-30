@@ -5,6 +5,11 @@
     - pacemaker
     - corosync
 
+- name: Update logrotate to roate corosync logs
+  template: src=corosync.log.j2 dest=20-corosync.conf
+  notify:
+    - restart rsyslog
+
 - name: Configure corosync cluster
   template: src=corosync.conf.j2 dest=/etc/corosync/corosync.conf
   notify:

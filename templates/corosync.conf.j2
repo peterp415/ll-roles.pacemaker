@@ -60,16 +60,14 @@ aisexec {
 }
 
 logging {
-        fileline: off
-        to_stderr: yes
-	to_logfile: no
-        to_syslog: yes
-        syslog_facility: daemon
-	debug: off
-        timestamp: on
-        logger_subsys {
-		      subsys: AMF
-                debug: off
-                tags: {{ pacemaker_logging_tags }}
-		}
+  to_logfile: yes
+  logfile: {{ pacemaker_logfile }}
+  to_syslog: yes
+  debug: off
+  timestamp: on
+  logger_subsys {
+    subsys: AMF
+    debug: off
+    tags: {{ pacemaker_logging_tags }}
+  }
 }
