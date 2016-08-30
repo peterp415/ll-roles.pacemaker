@@ -1,62 +1,82 @@
 # Please read the openais.conf.5 manual page
 totem {
-        version: 2
-        # How long before declaring a token lost (ms)
-        token: 3000
+  version: 2
+  # How long before declaring a token lost (ms)
+  # token: 3000
 
-        # How many token retransmits before forming a new configuration
-        token_retransmits_before_loss_const: 10
+  # How many token retransmits before forming a new configuration
+  # token_retransmits_before_loss_const: 10
 
-        # How long to wait for join messages in the membership protocol (ms)
-        join: 60
+  # How long to wait for join messages in the membership protocol (ms)
+  # join: 60
 
-        # How long to wait for consensus to be achieved before starting a new round of membership configuration (ms)
-        consensus: 3600
+  # How long to wait for consensus to be achieved before starting a new round of membership configuration (ms)
+  # consensus: 3600
 
-        # Turn off the virtual synchrony filter
-        vsftype: none
+  # Turn off the virtual synchrony filter
+  # vsftype: none
 
-        # Number of messages that may be sent by one processor on receipt of the token
-        max_messages: 20
+  # Number of messages that may be sent by one processor on receipt of the token
+  # max_messages: 20
 
-        # Limit generated nodeids to 31-bits (positive signed integers)
-        clear_node_high_bit: yes
+  # Limit generated nodeids to 31-bits (positive signed integers)
+  # clear_node_high_bit: yes
 
-        # Disable encryption
-        secauth: off
+  # Disable encryption
+  # secauth: off
 
-        # How many threads to use for encryption/decryption
-        threads: 0
+  # How many threads to use for encryption/decryption
+  # threads: 0
 
-        # Optionally assign a fixed node id (integer)
-        # nodeid: 1234
+  # Optionally assign a fixed node id (integer)
+  # nodeid: 1234
 
-        # This specifies the mode of redundant ring, which may be none, active, or passive.
-        rrp_mode: none
+  # This specifies the mode of redundant ring, which may be none, active, or passive.
+  # rrp_mode: none
 
-        interface {
-                # The following values need to be set based on your environment
-                ringnumber: 0
-                bindnetaddr: {{ pacemaker_bindaddr | mandatory }}
-                mcastaddr: {{ pacemaker_mcastaddr }}
-                mcastport: {{ pacemaker_mcastport }}
-        }
+{% if pacemaker_mode == "unicast" %}
+  transport: udpu
+{% endif %}
+  cluster_name: {{ pacemaker_cluster_name }}
+  interface {
+    # The following values need to be set based on your environment
+    ringnumber: {{ pacemaker_ringnumber | mandatory }}
+    bindnetaddr: {{ pacemaker_bindaddr | mandatory }}
+    mcastport: {{ pacemaker_mcastport }}
+    {% if pacemaker_mode == "multicast" %}
+    mcastaddr: {{ pacemaker_mcastaddr | mandatory }}
+    {% elif pacemaker_mode == "unicast" %}
+    broadcast: yes
+    {% endif %}
+    ttl: 1
+  }
+}
+
+{% if pacemaker_mode == "unicast" %}
+nodelist {
+{% for node in groups['pacemaker-nodes'] %}
+  node {
+    ring{{ pacemaker_ringnumber }}_addr: {{ hostvars[node]['pacemaker_bindaddr'] }}
+    name: {{ hostvars[node]['ansible_hostname'] }}
+    nodeid: {{ hostvars[node]['pacemaker_nodeid'] }}
+  }
+{% endfor %}
 }
 
 amf {
-        mode: disabled
+  mode: disabled
 }
 
 quorum {
-        # Quorum for the Pacemaker Cluster Resource Manager
-        provider: corosync_votequorum
-        wait_for_all: 1
-        expected_votes: 1
+  # Quorum for the Pacemaker Cluster Resource Manager
+  provider: corosync_votequorum
+  wait_for_all: 1
+  expected_votes: {{ groups['pacemaker-nodes']|length }}
 }
 
 aisexec {
-        user:   root
-        group:  root
+  user:   root
+  group:  root
 }
 
 logging {

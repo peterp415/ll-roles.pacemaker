@@ -1,4 +1,4 @@
-pacemaker_mcastaddr: 226.94.1.1
+pacemaker_mode: multicast
 pacemaker_mcastport: 5405
 pacemaker_logfile: /var/log/corosync/corosync.log
 pacemaker_logging_tags: "enter|leave|trace1|trace2|trace3|trace4|trace6"
