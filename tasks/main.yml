@@ -12,6 +12,7 @@
 
 - name: Ensure corosync is set to start at boot
   lineinfile: dest=/etc/default/corosync regexp=^START line="START=yes"
+  ignore_errors: "{{ ansible_check_mode }}"
 
 # See http://docs.openstack.org/ha-guide/controller-ha-pacemaker.html
 - name: Fix pacemaker boot order
@@ -45,3 +46,4 @@
     - crm configure property stonith-enabled=false
     - crm configure rsc_defaults resource-stickiness="{{ pacemaker_resource_stickiness }}"
     - crm configure rsc_defaults migration-threshold="{{ pacemaker_migration_threshold }}"
+  when: not ansible_check_mode
