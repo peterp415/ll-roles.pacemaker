@@ -5,10 +5,8 @@
     - pacemaker
     - corosync
 
-- name: Update logrotate to roate corosync logs
-  template: src=corosync.log.j2 dest=/etc/rsyslog.d/20-corosync.conf
-  notify:
-    - restart rsyslog
+- name: Update logrotate to rotate corosync logs
+  template: src=corosync.log.j2 dest=/etc/logrotate.d/corosync
 
 - name: Configure corosync cluster
   template: src=corosync.conf.j2 dest=/etc/corosync/corosync.conf
@@ -38,6 +36,7 @@
   with_items:
     - corosync
     - pacemaker
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - meta: flush_handlers
 

@@ -4,6 +4,3 @@
   with_items:
     - corosync
     - pacemaker
-
-- name: restart rsyslog
-  service: name=rsyslog state=restarted
