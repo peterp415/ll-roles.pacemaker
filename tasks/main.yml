@@ -8,6 +8,9 @@
 - name: Update logrotate to rotate corosync logs
   template: src=corosync.log.j2 dest=/etc/logrotate.d/corosync
 
+- name: Install corosync cluster authkey
+  copy: src="{{ pacemaker_authkey }}" dest=/etc/corosync/authkey owner=root group=root mode=0400
+
 - name: Configure corosync cluster
   template: src=corosync.conf.j2 dest=/etc/corosync/corosync.conf
   notify:

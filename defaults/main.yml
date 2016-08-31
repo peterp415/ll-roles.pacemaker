@@ -1,6 +1,9 @@
 pacemaker_mode: multicast
 pacemaker_mcastport: 5405
 pacemaker_logfile: /var/log/corosync/corosync.log
+pacemaker_crypto_hash: sha256
+pacemaker_crypto_cipher: aes128
+pacemaker_authkey: "files/{{ environment_name }}/authkey"
 pacemaker_logging_tags: "enter|leave|trace1|trace2|trace3|trace4|trace6"
 pacemaker_resource_stickiness: 100
 pacemaker_migration_threshold: 3
