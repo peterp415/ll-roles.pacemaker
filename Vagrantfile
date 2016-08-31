@@ -22,6 +22,10 @@ Vagrant.configure(2) do |config|
   end
 
   # Global scope provisioner - runs first
+  config.vm.provision "fix-no-tty", type: "shell" do |s|
+    s.privileged = false
+    s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile"
+  end
   config.vm.provision "shell", inline: $provision_shell_script
 
   config.cluster.nodes.each do |node|
@@ -59,8 +63,6 @@ Vagrant.configure(2) do |config|
 end
 
 $provision_shell_script = <<SCRIPT
+echo "Updating apt cache"
 apt-get -qy update >/dev/null 2>&1
-echo "Setting timezone..."
-echo "America/Los_Angeles" | sudo tee /etc/timezone
-sudo dpkg-reconfigure --frontend noninteractive tzdata >/dev/null 2>&1
 SCRIPT
