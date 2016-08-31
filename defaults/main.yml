@@ -7,3 +7,4 @@ pacemaker_authkey: "files/{{ environment_name }}/authkey"
 pacemaker_logging_tags: "enter|leave|trace1|trace2|trace3|trace4|trace6"
 pacemaker_resource_stickiness: 100
 pacemaker_migration_threshold: 3
+pacemaker_encrypted: on

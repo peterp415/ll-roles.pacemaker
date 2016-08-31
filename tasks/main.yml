@@ -10,6 +10,7 @@
 
 - name: Install corosync cluster authkey
   copy: src="{{ pacemaker_authkey }}" dest=/etc/corosync/authkey owner=root group=root mode=0400
+  when: pacemaker_encrypted
 
 - name: Configure corosync cluster
   template: src=corosync.conf.j2 dest=/etc/corosync/corosync.conf

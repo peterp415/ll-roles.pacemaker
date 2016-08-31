@@ -1,8 +1,12 @@
 # Please read the openais.conf.5 manual page
 totem {
   version: 2
+{% if pacemaker_encrypted %}
   crypto_hash: {{ pacemaker_crypto_hash }}
   crypto_cipher: {{ pacemaker_crypto_cipher }}
+{% elif not pacemaker_encrypted %}
+  secauth: off
+{% endif %}
 {% if pacemaker_mode == "unicast" %}
   transport: udpu
 {% endif %}

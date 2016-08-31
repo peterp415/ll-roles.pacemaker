@@ -43,9 +43,10 @@ This role requires the use of the inventory group `pacemaker-nodes`
 * `pacemaker_migration_threshold`: Integer value, when a node fail count passes this value, resources are banned from this node
 * `pacemaker_mode`: Used to control the cluster membership mechanism of either `multicast`(default) or `unicast`
 * `pacemaker_mcastport`: Which port to use for broadcast traffic
+* `pacemaker_encrypted`: Boolean, true: encrypted communication between nodes, false: unencrypted
 
 **Required**:
-* `environment_name`: This is used to find the `authkey` file used for encrypted communication, stored in the deploy at `files/<environment_name>/authkey`
+* `environment_name`: This is used to find the `authkey` file used for encrypted communication, stored in the deploy at `files/<environment_name>/authkey`. *Required when pacemaker_encrypted is true*
 * `pacemaker_cluster_name`: Used by corosync to name the cluster
 * `pacemaker_bindaddr`: Address used by the node to join the cluster
 * `pacemaker_mcastaddr`: Specify the multicast address, choose a free IP from the 239.192.0.0/24 range. See [RFC2365: Section 6.2](https://tools.ietf.org/html/rfc2365#section-6.2). *Multicast mode only*
