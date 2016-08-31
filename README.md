@@ -1,10 +1,10 @@
 # Corosync/Pacemaker
 
 Corosync and Pacemaker is a high availability cluster solution with corosync working as the
-messaging layer and pacemaker as the resorce manager.
+messaging layer and pacemaker as the resource manager.
 
-This role installed corosync and pacemaker to a group of nodes named `pacemaker-nodes`, which must
-consist of at least two resource nodes and one witness node, or such that the combination of
+This role installs corosync and pacemaker to a group of nodes named `pacemaker-nodes`, which must
+consist of at least two resource nodes and one witness node, and such that the combination of
 resource and witness nodes is an odd number. This role only sets up the HA layer, it does not
 configure any resources, except for some *hopefully* sane global defaults. For an example of such,
 see `ig/deploy/infra_routers` for the `router-vip` role.
@@ -45,11 +45,11 @@ This role requires the use of the inventory group `pacemaker-nodes`
 * `pacemaker_mcastport`: Which port to use for broadcast traffic
 
 **Required**:
-* `environment_name`: This is used to fine the `authkey` file used for encrypted communication, stored in the deploy at `files/<environment_name>/authkey`
+* `environment_name`: This is used to find the `authkey` file used for encrypted communication, stored in the deploy at `files/<environment_name>/authkey`
 * `pacemaker_cluster_name`: Used by corosync to name the cluster
 * `pacemaker_bindaddr`: Address used by the node to join the cluster
-* `pacemaker_mcastaddr`: Specify the multicast address, choose a free IP from the 239.192.0.0/24 range. See [RFC2365: Section 6.2](https://tools.ietf.org/html/rfc2365#section-6.2). *Only used in multicast mode*
-* `pacemaker_nodeid`: Interger value, used to uniquely identify a node. *Only used in unicast mode*
+* `pacemaker_mcastaddr`: Specify the multicast address, choose a free IP from the 239.192.0.0/24 range. See [RFC2365: Section 6.2](https://tools.ietf.org/html/rfc2365#section-6.2). *Multicast mode only*
+* `pacemaker_nodeid`: Integer value, used to uniquely identify a node. *Unicast mode only*
 
 ### Encrypted communication
 
