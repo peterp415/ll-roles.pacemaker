@@ -6,6 +6,7 @@ required_plugins = [
 
 Vagrant.configure(2) do |config|
   config.ssh.insert_key = false
+  config.timezone.value = :host
 
   required_plugins.each do |plugin|
     if not Vagrant.has_plugin?(plugin)
