@@ -1,0 +1,5 @@
+environment_name: vagrant
+pacemaker_cluster_name: vagrant
+pacemaker_mcastaddr: 239.192.0.2
+pacemaker_bindaddr: "{{ ansible_eth1.ipv4.address }}"
+pacemaker_authkey: authkey
