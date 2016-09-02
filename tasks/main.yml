@@ -5,6 +5,13 @@
     - pacemaker
     - corosync
 
+- name: Update logrotate to rotate corosync logs
+  template: src=corosync.log.j2 dest=/etc/logrotate.d/corosync
+
+- name: Install corosync cluster authkey
+  copy: src="{{ pacemaker_authkey }}" dest=/etc/corosync/authkey owner=root group=root mode=0400
+  when: pacemaker_encrypted
+
 - name: Configure corosync cluster
   template: src=corosync.conf.j2 dest=/etc/corosync/corosync.conf
   notify:
@@ -12,6 +19,7 @@
 
 - name: Ensure corosync is set to start at boot
   lineinfile: dest=/etc/default/corosync regexp=^START line="START=yes"
+  ignore_errors: "{{ ansible_check_mode }}"
 
 # See http://docs.openstack.org/ha-guide/controller-ha-pacemaker.html
 - name: Fix pacemaker boot order
@@ -32,6 +40,7 @@
   with_items:
     - corosync
     - pacemaker
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - meta: flush_handlers
 
@@ -45,3 +54,4 @@
     - crm configure property stonith-enabled=false
     - crm configure rsc_defaults resource-stickiness="{{ pacemaker_resource_stickiness }}"
     - crm configure rsc_defaults migration-threshold="{{ pacemaker_migration_threshold }}"
+  when: not ansible_check_mode

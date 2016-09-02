@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+{{ pacemaker_logfile }} {
+   weekly
+   rotate 5
+   compress
+   delaycompress
+   missingok
+   notifempty
+   copytruncate
+   create 660 hacluster root
+}

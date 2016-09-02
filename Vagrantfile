@@ -1,29 +1,69 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :                                                                                                                   
-# Vagrantfile API/syntax version. 
-# Blame Mariya Snow <mariya.snow@avg.com>
-VAGRANTFILE_API_VERSION = "2"
+required_plugins = [
+  "vagrant-compose",
+  "vagrant-hostmanager",
+  "vagrant-timezone"
+]
 
-NUM_CONTROLLERS = ENV['NUM_CONTROLLERS'] || 2
+Vagrant.configure(2) do |config|
+  config.ssh.insert_key = false
+  config.timezone.value = :host
 
-Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  required_plugins.each do |plugin|
+    if not Vagrant.has_plugin?(plugin)
+      raise "Install required plugin: #{plugin} `vagrant plugin install #{plugin}`"
+    end
+  end
 
-  config.ssh.forward_agent = true
-(0..NUM_CONTROLLERS).each do |i|
-    config.vm.define "DangerZone#{i}" do |controller_config|
-      controller_config.vm.box = "ubuntu/trusty64"
-      controller_config.ssh.insert_key = false
-      controller_config.vm.hostname = "DangerZone#{i}"
-      controller_config.vm.network :private_network, ip: "172.100.0.10#{i}"
-      controller_config.vm.network :private_network, ip: "172.200.0.10#{i}"
-      controller_config.vm.provider "virtualbox" do |v|
-        v.memory = 512
-        v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
-        v.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
+  config.cluster.compose('pacemaker') do |c|
+    c.nodes(3, 'ha') do |n|
+      n.memory = "256"
+      n.box = "bento/ubuntu-14.04"
+      n.ansible_groups = ['pacemaker-nodes']
+    end
+  end
+
+  # Global scope provisioner - runs first
+  config.vm.provision "fix-no-tty", type: "shell" do |s|
+    s.privileged = false
+    s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile"
+  end
+  config.vm.provision "shell", inline: $provision_shell_script
+
+  config.cluster.nodes.each do |node|
+    config.vm.define "#{node.boxname}" do |node_config|
+      node_config.vm.box = "#{node.box}"
+      node_config.vm.hostname = "#{node.boxname}"
+      node_config.vm.network 'private_network', type: "dhcp"
+
+      node_config.vm.provider :virtualbox do |vb|
+        vb.memory = node.memory
+        vb.cpus = node.cpus
+        vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+        vb.customize ['guestproperty', 'set', :id, '/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold', 10000]
       end
-      config.vm.provision "ansible" do |ansible|
-      ansible.playbook = "site.yml"
+
+      node_config.vm.provider "vmware_fusion" do |vb|
+        vb.vmx["memsize"] = node.memory
+        vb.vmx["numvcpus"] = node.cpus
+      end
+
+      # Only run ansible provisioner after all nodes are up
+      if node.index == config.cluster.nodes.size - 1
+        node_config.vm.provision "ansible" do |ansible|
+          ansible.playbook = "tests/vagrant.yml"
+          ansible.extra_vars = "tests/vars.yml"
+          ansible.limit = "all"
+          ansible.groups = config.cluster.ansible_groups
+          ansible.sudo = true
+          ansible.verbose = true
+        end
       end
     end
   end
+
 end
+
+$provision_shell_script = <<SCRIPT
+echo "Updating apt cache"
+apt-get -qy update >/dev/null 2>&1
+SCRIPT
