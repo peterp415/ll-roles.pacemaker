@@ -1,0 +1,70 @@
+---
+- name: Add resource
+  hosts: pacemaker-nodes
+  run_once: true
+  vars:
+    resources:
+      - dummy1
+      - dummy2
+    resource_group: Dummies
+    resource_witness: "{{ groups['pacemaker-nodes'][-1] }}"
+    resource_primary: "{{ groups['pacemaker-nodes'][1] }}"
+  tasks:
+    - name: Define resources
+      command: "crm configure primitive {{ item }} ocf:pacemaker:Dummy op monitor interval=10s"
+      with_items: "{{ resources }}"
+
+    - name: Colocate resources
+      command: "crm configure colocation {{ resource_group }} inf: {{ resources | join(' ') }}"
+
+    - name: Ban resources on witness node
+      command: "crm_resource --resource {{ item }} --ban --host {{ resource_witness }}"
+      with_items: "{{ resources }}"
+
+    - name: Make resource prefer primary node
+      command: crm configure location prefer-"{{ item }}"-"{{ resource_primary }}" "{{ item }}" "50:" "{{ resource_primary }}"
+      with_items: "{{ resources }}"
+
+    - name: Add ping test resource
+      command: "crm configure primitive dummy_ping ocf:pacemaker:ping params dampen=5s multiplier=1000 host_list=8.8.8.8 op monitor interval=15s timeout=5s on-fail=restart"
+
+    - name: Clone ping test
+      command: "crm configure clone clone_ping dummy_ping meta globally-unique=false"
+
+    - name: Resource prefer nodes with ping
+      command: "crm configure location {{ item }}_needs_ping {{ item }} rule -inf: pingd lt 1"
+      with_items: "{{ resources }}"
+
+- name: Test Ping Failure
+  hosts: pacemaker-nodes
+  run_once: true
+  vars:
+    resource: dummy1
+    resource_primary: "{{ groups['pacemaker-nodes'][1] }}"
+  tasks:
+    # For some unknown reason, ping check dies on one node while others are ok
+    - name: Flush checks
+      command: crm_resource -P
+
+    - pause: seconds=10
+
+    - name: Check current resource location
+      command: crm_resource -W -r {{ resource }}
+      register: resource_loc
+
+    - name: Assert resource currently on primary
+      assert: { that: "resource_primary in resource_loc.stdout" }
+
+    - name: Make ping test fail on primary
+      delegate_to: "{{ resource_primary }}"
+      command: iptables -A INPUT -s 8.8.8.8 -j DROP
+
+    - name: Wait a moment
+      pause: seconds=20
+
+    - name: Check current resource location
+      command: crm_resource -W -r {{ resource }}
+      register: resource_loc
+
+    - name: Assert resource currently NOT on primary
+      assert: { that: "resource_primary not in resource_loc.stdout" }
