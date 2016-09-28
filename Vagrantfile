@@ -57,6 +57,15 @@ Vagrant.configure(2) do |config|
           ansible.sudo = true
           ansible.verbose = true
         end
+
+        node_config.vm.provision "ansible" do |ansible|
+          ansible.playbook = "tests/add_resource.yml"
+          ansible.extra_vars = "tests/vars.yml"
+          ansible.limit = "all"
+          ansible.groups = config.cluster.ansible_groups
+          ansible.sudo = true
+          ansible.verbose = true
+        end
       end
     end
   end
