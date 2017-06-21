@@ -39,7 +39,7 @@ This role requires the use of the inventory group `pacemaker-nodes`
 ### Variables
 
 **Default Variables**:
-* `pacemaker_default_resource_stickiness`: Interger value. Consider 1 to be auto failback off
+* `pacemaker_default_resource_stickiness`: Integer value. Consider 1 to be auto failback off
 * `pacemaker_resource_stickiness`: Integer value, used to associate a "cost" to moving resources.
 * `pacemaker_mode`: Used to control the cluster membership mechanism of either `multicast`(default) or `unicast`
 * `pacemaker_mcastport`: Which port to use for broadcast traffic
