@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# This will set the boot order replacing:
+#
+#   command: update-rc.d pacemaker start 35 2 3 4 5 . stop 10 0 1 6 .
+#
+# It will handle the first time setup, and will be idempotent,
+# check-accurate and check-safe.  The end-state is:
+#
+# $ ls -l rc?.d/*pac*
+# lrwxrwxrwx 1 root root 19 Jun 19 23:52 rc0.d/K00pacemaker -> ../init.d/pacemaker
+# lrwxrwxrwx 1 root root 19 Jun 19 23:52 rc1.d/K00pacemaker -> ../init.d/pacemaker
+# lrwxrwxrwx 1 root root 19 Jun 19 23:52 rc2.d/S20pacemaker -> ../init.d/pacemaker
+# lrwxrwxrwx 1 root root 19 Jun 19 23:52 rc3.d/S20pacemaker -> ../init.d/pacemaker
+# lrwxrwxrwx 1 root root 19 Jun 19 23:52 rc4.d/S20pacemaker -> ../init.d/pacemaker
+# lrwxrwxrwx 1 root root 19 Jun 19 23:52 rc5.d/S20pacemaker -> ../init.d/pacemaker
+# lrwxrwxrwx 1 root root 19 Jun 19 23:52 rc6.d/K00pacemaker -> ../init.d/pacemaker
+
+set -e
+
+function catch_trap {
+  # http://linuxcommand.org/wss0160.php is a nice reference to traps.
+  echo '{"changed": false, "failed": true}'
+  exit 0
+}
+
+trap catch_trap ERR
+
+# Source the file of arguments that Ansible generates.
+source $1
+
+# Check if a change is needed.  If none is needed, we're always done.
+if [[ $(/bin/readlink -f /etc/rc0.d/K00pacemaker) == "/etc/init.d/pacemaker" ]] &&
+        [[ $(/bin/readlink -f /etc/rc1.d/K00pacemaker) == "/etc/init.d/pacemaker" ]] &&
+        [[ $(/bin/readlink -f /etc/rc2.d/S20pacemaker) == "/etc/init.d/pacemaker" ]] &&
+        [[ $(/bin/readlink -f /etc/rc3.d/S20pacemaker) == "/etc/init.d/pacemaker" ]] &&
+        [[ $(/bin/readlink -f /etc/rc4.d/S20pacemaker) == "/etc/init.d/pacemaker" ]] &&
+        [[ $(/bin/readlink -f /etc/rc5.d/S20pacemaker) == "/etc/init.d/pacemaker" ]] &&
+        [[ $(/bin/readlink -f /etc/rc6.d/K00pacemaker) == "/etc/init.d/pacemaker" ]]; then
+  echo '{"changed": false, "failed": false}'
+  exit 0
+fi
+
+# Check if we are in check-mode.  If so, return that a change will happen.
+if [ "${_ansible_check_mode}" = "True" ]; then
+  echo "Exiting because check_mode."
+  echo '{"changed": true, "failed": false}'
+  exit 0
+fi
+
+# At this point, we are in normal-mode so make the change.
+/usr/sbin/update-rc.d -f pacemaker remove
+/usr/sbin/update-rc.d pacemaker start 20 2 3 4 5 . stop 00 0 1 6 .
+echo '{"changed": true, "failed": false}'
+
