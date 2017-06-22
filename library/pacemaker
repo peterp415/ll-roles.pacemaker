@@ -321,18 +321,24 @@ class OrderParser(BaseParser):
 
 
 class PropertyParser(BaseParser):
+    id_name = "id"
     partial_compare = True
     no_delete = True
 
     def parse(self, args):
+        debug.append("PropertyParser args: {}".format(args))
+
         ret = dict(
             command=args.pop(0),
+            # id="hi",
+            id=args.pop(0),
             )
-        if args[0].startswith("$id"):
-            args.pop(0)
-
-        if args[0].startswith("cib-bootstrap-options:"):
-            args.pop(0)
+        # args.pop(0)
+        # if args[0].startswith("$id"):
+        #     args.pop(0)
+        #
+        # if args[0].startswith("cib-bootstrap-options:"):
+        #     args.pop(0)
 
         while (args):
             arg = args.pop(0)
@@ -421,8 +427,8 @@ class CIBParser(object):
 
     def parse_cib(self, args):
         if args[0] in self.cib_parser_class:
-            return self.cib_parser_class[args[0]]\
-                    (args[:], module=self.module)
+            # This will instantiate the appropriate Parser class.
+            return self.cib_parser_class[args[0]](args[:], module=self.module)
         return None
 
     def parse_cibs(self, lines):
@@ -483,16 +489,20 @@ def main():
     old_cib = None
     target_config = { }
     debug.append("Checking new command: %s, id: %s" % (new.command, new.id))
+    debug.append("out.splitlines: {}\n".format(out.splitlines()))
     for cur in parser.parse_cibs(out.splitlines()):
+
         debug.append("Checking cur command: %s, id: %s" % (cur.command, cur.id))
         if new.command != cur.command:
             continue
         if new.id != cur.id:
             continue
         old_cib = cur.cib
+        # target_config = cur
+        # target_config.get()
         target_config['id'] = cur.id
         target_config['command'] = cur.command
-        #debug.append("Checking is_same for cur command: %s, id: %s" % (cur.command, cur.id))
+        # debug.append("Checking is_same for cur command: %s, id: %s" % (cur.command, cur.id))
         is_same = new.is_same(cur)
         break
 
