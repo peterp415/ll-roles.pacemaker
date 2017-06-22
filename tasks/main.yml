@@ -47,11 +47,3 @@
 - name: Wait for cluster
   pause: seconds=30
 
-- name: Configure cluster
-  run_once: true
-  command: "{{ item }}"
-  with_items:
-    - crm configure property stonith-enabled=false
-    - crm configure property default-resource-stickiness="{{ pacemaker_default_resource_stickiness }}"
-    - crm configure rsc_defaults resource-stickiness="{{ pacemaker_resource_stickiness }}"
-  when: not ansible_check_mode
