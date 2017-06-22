@@ -465,9 +465,10 @@ def main():
         module.fail_json(rc=256, msg="no command given")
 
     if args[0] == "commit":
-        rc, out, err = module.run_command(["crm", "configure", "commit"])
-        if rc:
-            module.fail_json(rc=256, msg="crm command failed", out=out, err=err)
+        if not module.check_mode:
+            rc, out, err = module.run_command(["crm", "configure", "commit"])
+            if rc:
+                module.fail_json(rc=256, msg="crm command failed", out=out, err=err)
         module.exit_json(args=args, changed=True)
 
     parser = CIBParser(module)
@@ -480,6 +481,7 @@ def main():
 
     is_same = None
     old_cib = None
+    target_config = { }
     debug.append("Checking new command: %s, id: %s" % (new.command, new.id))
     for cur in parser.parse_cibs(out.splitlines()):
         debug.append("Checking cur command: %s, id: %s" % (cur.command, cur.id))
@@ -488,6 +490,8 @@ def main():
         if new.id != cur.id:
             continue
         old_cib = cur.cib
+        target_config['id'] = cur.id
+        target_config['command'] = cur.command
         #debug.append("Checking is_same for cur command: %s, id: %s" % (cur.command, cur.id))
         is_same = new.is_same(cur)
         break
@@ -526,7 +530,19 @@ def main():
             if rc:
                 module.fail_json(rc=256, msg="crm -F -w %s failed" % ' '.join(command), out=out, err=err, debug=debug)
 
-    module.exit_json(args=args, old=old_cib, new=new.cib, debug=debug, changed=True)
+    # Report a sort of diff if needed
+    diff = { }
+    if getattr(module,'_diff',False) is True:
+        prepared_list = []
+        if need_delete:
+            prepared_list.append("Configuration item to delete:")
+            prepared_list.append("%s %s" % (target_config.get('command', "<none>"), target_config.get('id', "<none>")))
+        prepared_list.append("Planning to run commands:")
+        for command in crm_config_commands:
+            prepared_list.append("crm -F -w %s" % ' '.join(command))
+        diff['prepared'] = '\n'.join(prepared_list)
+
+    module.exit_json(args=args, old=old_cib, new=new.cib, debug=debug, changed=True, diff=diff)
 
 
 # import module snippets
