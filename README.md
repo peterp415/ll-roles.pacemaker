@@ -25,6 +25,18 @@ This example is an excerpt from `ig/deploy/infra_routers`
       tags:
         - highavailability
 
+## pacemaker module
+We found a public repo, https://github.com/egroeper/ansible-pacemaker.  It contains an Ansible
+module called `pacemaker` which does a good job with idempotence and check-mode.  That module is 
+copied into this repo.
+
+Any deploy that includes this shared role will have access to `pacemaker` because Ansible's module
+namespace is flat.  You can see this in `deploy.infra_routers`.  There, `tasks/main.yml` uses
+the `pacemaker` module.
+
+If we find any problems with using the `pacemaker` module, we will make the fix in this repo and
+bump the version.  Playbooks can then bump `requirements.yaml` to this new version.
+
 ## Requirements
 
 ### Inventory
