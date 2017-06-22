@@ -1,3 +1,6 @@
+Version 1.5:
+ - Give some parsers an id_name.
+
 Version 1.4:
  - Add a module to manipulate pacemaker resources
 
