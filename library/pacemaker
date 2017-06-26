@@ -252,8 +252,15 @@ class LocationParser(BaseParser):
             id=args.pop(0),
             rsc=args.pop(0),
             )
-        ret["rules"] = []
 
+        # Handle the variant: 'location <id> <rsc> <score>: <node>'
+        if args[0] != "rule":
+            ret["score"]=args.pop(0)
+            ret["node"]=args.pop(0)
+            return ret
+
+        # Handle the variant: 'location <id> <rsc> <rule> [<rule> ...]'
+        ret["rules"] = []
         newrule = None
         while (args):
             arg = args.pop(0)
