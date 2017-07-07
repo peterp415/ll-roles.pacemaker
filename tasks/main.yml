@@ -23,7 +23,7 @@
 
 # See http://docs.openstack.org/ha-guide/controller-ha-pacemaker.html
 - name: Fix pacemaker boot order
-  command: update-rc.d pacemaker start 20 2 3 4 5 . stop 00 0 1 6 .
+  set_boot_order:
 
 - name: Set pacemaker uid/gid
   copy: src=pacemaker dest=/etc/corosync/uidgid.d/pacemaker
