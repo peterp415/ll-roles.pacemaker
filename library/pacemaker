@@ -465,9 +465,23 @@ def main():
             'resource': dict(required=True),
             'state': dict(default='present', choices=['present', 'absent']),
             'commit': dict(default=True, type='bool', choices=BOOLEANS),
+            'showstatus': dict(default=None),
         },
         supports_check_mode=True
     )
+
+    crm_args = ["crm", "configure", "show"]
+    rc, out, err = module.run_command(crm_args)
+    if rc:
+        module.fail_json(rc=256, msg="crm configure show failed", out=out, err=err)
+
+    # Diffs only show when there's a change.  This is okay because
+    # the playbook that calls this doesn't need this module to be
+    # idempotent.  The calling task will have to have the 'resource'
+    # attribute because that is required by this module.
+    if module.params['showstatus']:
+        diff = {'prepared': out}
+        module.exit_json(diff=diff, changed=True)
 
     state = module.params['state']
     need_commit = module.params['commit']
@@ -486,11 +500,6 @@ def main():
 
     parser = CIBParser(module)
     new = parser.parse_cib(args)
-
-    crm_args = ["crm", "configure", "show"]
-    rc, out, err = module.run_command(crm_args)
-    if rc:
-        module.fail_json(rc=256, msg="crm configure show failed", out=out, err=err)
 
     is_same = None
     old_cib = None
