@@ -1,3 +1,9 @@
+Version 1.7:
+ - Add showstatus attribute.
+
+Version 1.6:
+ - Idempotentize boot order.
+
 Version 1.5:
  - Give some parsers an id_name.
 
